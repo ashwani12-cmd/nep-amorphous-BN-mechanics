@@ -1,0 +1,4 @@
+# Simulation data files: store as LF text, keep out of GitHub's language
+# statistics, and collapse their diffs in the web UI (they are generated output).
+*.dat  text eol=lf linguist-generated=true
+*.xyz  text eol=lf linguist-generated=true
