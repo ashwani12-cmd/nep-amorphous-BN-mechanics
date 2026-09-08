@@ -1,0 +1,7 @@
+# Python environment for the analysis scripts and notebooks.
+# Install with:  pip install -r requirements.txt
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+ase>=3.22
+jupyter>=1.0

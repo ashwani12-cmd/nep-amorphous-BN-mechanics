@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------------------
+# Raw MD output — regenerate by re-running the simulations, do not commit
+# ---------------------------------------------------------------------------
+*.cfg
+*.dump
+*.lammpstrj
+*.restart
+restart.*
+log.lammps
+log.*.g++.*
+HEA.log
+out.dat
+gpumd.out
+gpumd.err
+gpu_monitor.log
+slurm-*.out
+job.*.out
+job.*.err
+modules_used_*.txt
+nep_y*_generation*.txt
+nep_y*_generation*.restart
+
+# LAMMPS data snapshots produced mid-run
+NPT1.data
+NPT2.data
+relaxed_structure.data
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# LaTeX build artefacts
+# ---------------------------------------------------------------------------
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+manuscript/main.log
+manuscript/main.out
+manuscript/main.pdf
+
+# ---------------------------------------------------------------------------
+# OS / editor
+# ---------------------------------------------------------------------------
+.DS_Store
+*.swp
+*~

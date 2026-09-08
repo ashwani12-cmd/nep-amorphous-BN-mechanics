@@ -1,0 +1,163 @@
+variable jumpname index Tension.in 
+variable folder index HEA_Tension
+variable samplepxx equal pxx
+variable samplepyy equal pyy
+variable samplepzz equal pzz
+variable currentT equal 300
+variable ts equal 0.001 # for units metal: 1fs 
+variable pdamp equal ${ts}*1000 
+
+#INITIALIZATION
+
+units metal 
+dimension 3 
+boundary p p p 
+atom_style atomic
+atom_modify map array
+# ---------- Create Atoms ---------------------
+read_data  aBN_density_1.00.data
+mass 1 10.81     # Boron
+mass 2 14.007    # Nitrogen
+
+pair_style      nep
+pair_coeff      * * nep.txt B N
+
+
+comm_style      brick
+run 0
+
+
+balance 1.05 shift xz 5 1.05
+
+reset_timestep 0
+timestep 0.5
+min_style	     cg
+minimize 1e-25 1e-25 5000 10000
+
+reset_timestep 0
+timestep 0.5
+fix 5 all box/relax  x 0.0 y 0.0 z -1000 # make the stress in the tensile direction a little compressed for getting the ref. length by "Interpolation" for strain 
+min_style	  cg
+thermo 100
+thermo_style custom step temp  density pxx  pyy  pzz pe press
+minimize 1e-25 1e-25 5000 10000
+unfix 5
+
+timestep 1e-5   
+velocity all create 1 12345 mom yes rot yes dist gaussian
+
+thermo 1 
+thermo_style custom step temp density pxx pyy pzz  etotal  #pe 
+run 0
+reset_timestep 0
+
+fix 1 all npt temp 1 1 1e-3  aniso 0.0 0.0 0.1    
+
+thermo 200  
+thermo_style custom step temp density pxx pyy pzz pe  cella cellb cellc pe 
+dump 1 all custom 5000 00NPT1_*.cfg id type x y z
+run 30000
+write_data  NPT1.data 
+unfix 1
+undump 1
+
+#########label npt2
+
+reset_timestep 0
+timestep 1e-3 
+velocity all create 1 12345 mom yes rot yes dist gaussian   
+velocity all scale 1 
+fix 1 all npt temp 1.0 300.0 0.1  x 0.0 0.0 ${pdamp} y 0.0 0.0 ${pdamp} z 800.0 800.0 ${pdamp}
+thermo 200  
+thermo_style custom step temp density pxx pyy pzz pe  cella cellb cellc pe 
+dump 1 all custom 5000 00NPT2_*.cfg id type x y z
+run 50000
+write_data  NPT2.data 
+unfix 1
+undump 1
+
+
+timestep ${ts}
+velocity all create ${currentT} 12345 mom yes rot yes dist gaussian
+velocity all scale ${currentT}
+fix 1 all npt temp ${currentT} ${currentT} 0.1 y 0.0 0.0 ${pdamp} z 800.0 800.0 ${pdamp}
+thermo 100
+thermo_style custom step temp lz pxx pyy pzz  
+dump 2 all custom 100 00RSNPT_*.cfg id type x y z
+reset_timestep 0
+run 5000   
+unfix 1
+undump 2
+
+
+variable lz equal lz
+variable tmp equal "lz"
+variable L0 equal ${tmp}
+variable tenratio equal 0.002                 #######################
+variable strain equal "(lz - v_L0)/v_L0"
+variable p1 equal "v_strain"
+variable currentzlo equal zlo
+
+######## tensile simulation from here #######
+
+variable i loop 1000 ##tension loop begin
+
+label tension_i
+
+variable zten equal ${L0}+(${tenratio}*${L0})*(${i}-1)+${currentzlo}
+change_box all z final ${currentzlo} ${zten} remap units box
+
+
+reset_timestep 0
+variable totalE equal pe
+
+fix 1 all npt temp ${currentT} ${currentT} 0.1 y 0.0 0.0 ${pdamp}       ##########modify
+thermo 100 
+thermo_style custom step temp pe lz pzz v_p1 v_totalE
+run 5000     #2000
+unfix 1
+
+reset_timestep 0
+
+timestep 0.001
+
+# end of statics way
+fix 1 all npt temp ${currentT} ${currentT} 0.1  y 0.0 0.0 ${pdamp}      ##########modify
+fix ave all ave/time 20 100 2000 v_totalE format                    %20.5g
+fix avexx all ave/time 20 100 2000 v_samplepxx format                    %20.5g
+fix aveyy all ave/time 20 100 2000 v_samplepyy format                    %20.5g
+fix avezz all ave/time 20 100 2000 v_samplepzz format                    %20.5g
+
+thermo 100 
+thermo_style custom step temp pe lz pzz v_p1 v_totalE
+run 2000 # for dynamical way, need to use more steps and ave/time 1000
+
+print "********sample here"
+
+###################################
+variable avePE equal f_ave
+variable avepxx equal f_avexx
+variable avepyy equal f_aveyy
+variable avepzz equal f_avezz
+
+
+variable pxxGPa equal -${avepxx}/10000 #bar to Gpa
+variable pyyGPa equal -${avepyy}/10000
+variable pzzGPa equal -${avepzz}/10000
+
+print "lz: $(lz) Vol: $(vol) PE: ${avePE}  Pxx: ${pxxGPa} Pyy: ${pyyGPa} Pzz: ${pzzGPa} " append Strain_Stress.dat screen no
+###################################
+unfix 1
+unfix ave
+unfix avexx
+unfix aveyy
+unfix avezz
+
+dump 1 all custom 1 00stress_${i}.cfg id type x y z 
+run 0
+undump 1
+next i
+jump ${jumpname} tension_i
+
+
+print "Simulation done!!!"

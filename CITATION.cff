@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the associated paper."
+title: "Benchmarking Neural Equivariant Potentials for the Mechanical Response of Amorphous Boron Nitride"
+authors:
+  - family-names: Kushwaha
+    given-names: Ashwani
+    affiliation: "Department of Mechanical Engineering, IIT Bombay, Mumbai 400076, India"
+    email: 193100026@iitb.ac.in
+  - family-names: Singh
+    given-names: Amit
+    affiliation: "Department of Mechanical Engineering, IIT Bombay, Mumbai 400076, India"
+    email: amit.k.singh@iitb.ac.in
+keywords:
+  - amorphous boron nitride
+  - machine-learning interatomic potential
+  - neuroevolution potential
+  - NEP
+  - molecular dynamics
+  - mechanical properties
+  - LAMMPS
+license: MIT
+date-released: "2026-09-08"
